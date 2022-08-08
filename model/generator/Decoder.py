@@ -1,32 +1,61 @@
 import torch
 from torch import nn as NN
-from basicblock.MBConvN import MBConv1
 
 class Decoder(NN.Module):
 
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels=3):
 
         super(Decoder, self).__init__()
 
-        self.transpose_convolutional_block = NN.ConvTranspose2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=2, padding=1, bias=True)
+        self.block7 = NN.ConvTranspose2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1, output_padding=1)
+        self.block6 = NN.ConvTranspose2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1,
+                                         output_padding=1)
+        self.block5 = NN.ConvTranspose2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1,
+                                         output_padding=1)
+        self.block4 = NN.ConvTranspose2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1,
+                                         output_padding=1)
+        self.block3 = NN.ConvTranspose2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1,
+                                         output_padding=1)
+        self.block2 = NN.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
 
-        self.mb_conv_1 = MBConv1(in_channels=16, out_channels=out_channels, kernel_size=3, stride=1, r=24, p=1)
 
-        self.mb_conv_2 = MBConv1(in_channels=out_channels, out_channels=16, kernel_size=3, stride=1, r=24, p=1)
+    def forward(self, x: dict):
 
-        self.sigmoid = NN.Sigmoid()
+        block7_input = []
+        for channel in x.keys():
+            block7_input.append(x[channel]['7'])
+        block7_input = torch.cat(block7_input, dim=1)
+        block7_out = self.block7(block7_input)
 
-        self.mb_conv_3 = MBConv1(in_channels=16, out_channels=out_channels, kernel_size=3, stride=1, r=24, p=1)
+        block6_input = []
+        for channel in x.keys():
+            block6_input.append(x[channel]['6'])
+        block6_input = torch.cat(block6_input, dim=1)
+        block6_input = torch.cat([block7_out, block6_input], dim=1)
 
+        block6_out = self.block6(block6_input)
+        block5_input = []
+        for channel in x.keys():
+            block5_input.append(x[channel]['4'])
+        block5_input = torch.cat(block5_input, dim=1)
+        block5_input = torch.cat([block6_out, block5_input], dim=1)
 
-    def forward(self, x):
-        x = self.transpose_convolutional_block(x)
-        x = self.mb_conv_1(x)
+        block5_out = self.block5(block5_input)
+        block4_input = []
+        for channel in x.keys():
+            block4_input.append(x[channel]['3'])
+        block4_input = torch.cat(block4_input, dim=1)
+        block4_input = torch.cat([block5_out, block4_input], dim=1)
 
-        x = self.mb_conv_2(x)
+        block4_out = self.block4(block4_input)
+        block3_input = []
+        for channel in x.keys():
+            block3_input.append(x[channel]['2'])
+        block3_input = torch.cat(block3_input, dim=1)
+        block3_input = torch.cat([block4_out, block3_input], dim=1)
 
-        x = self.sigmoid(x)
+        block3_out = self.block3(block3_input)
 
-        x = self.mb_conv_3(x)
+        block2_out = self.block2(block3_out)
 
-        return x
+        return block2_out
