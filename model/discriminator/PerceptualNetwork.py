@@ -4,10 +4,10 @@ import torch
 from torch import nn as NN
 from torchvision.models import vgg16
 
-class PerceptualLossNetwork(NN.Module):
+class PerceptualNetwork(NN.Module):
 
     def __init__(self):
-        super(PerceptualLossNetwork, self).__init__()
+        super(PerceptualNetwork, self).__init__()
         self.vgg16_layers = vgg16(pretrained=True).features
 
         self.layer_name_mapping = {
@@ -23,4 +23,4 @@ class PerceptualLossNetwork(NN.Module):
             x = module(x)
             if name in self.layer_name_mapping:
                 output[self.layer_name_mapping[name]] = x
-        return namedtuple('PerceptualLossOutput', output.keys())(**output)
+        return namedtuple('PerceptualNetworkOutput', output.keys())(**output)
