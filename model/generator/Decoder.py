@@ -31,6 +31,8 @@ class Decoder(NN.Module):
         for channel in x.keys():
             block6_input.append(x[channel]['6'])
         block6_input = torch.cat(block6_input, dim=1)
+        print("Block 6 input", block6_input.size)
+        print("Black 7 out", block7_out.size)
         block6_input = torch.cat([block7_out, block6_input], dim=1)
 
         block6_out = self.block6(block6_input)
