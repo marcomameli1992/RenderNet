@@ -5,6 +5,8 @@ from dataset.RenderDataset import RenderDataset
 from model.discriminator.Discriminator import PerceptualDiscriminator
 from torch.utils.data import DataLoader
 
+from kornia.color import rgb_to_hsv, hsv_to_rgb
+
 from torchvision.transforms import Resize
 
 from tqdm import tqdm
@@ -26,7 +28,7 @@ args = parser.parse_args()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 #%% Model construction
-generator = Generator(3840, 3) ##
+generator = Generator(4480, 3) ##
 discriminator = PerceptualDiscriminator()
 
 generator.to(device)
@@ -69,10 +71,26 @@ for epoch in range(args.epochs):
             ## Generator
             fake_generated = generator(data)
 
+            fake_discriminator = discriminator(hsv_to_rgb(fake_generated))
 
-            fake_discriminator = discriminator(fake_generated)
+            ## Loss
+            discriminator_loss_1 = -(torch.mean(real_discriminator.d1) - torch.mean(fake_discriminator.d1))
+            discriminator_loss_2 = -(torch.mean(real_discriminator.d2) - torch.mean(fake_discriminator.d2))
+            discriminator_loss_3 = -(torch.mean(real_discriminator.d3) - torch.mean(fake_discriminator.d3))
+            discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
 
+            discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
 
+            generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1))) + (0.25 * (-torch.mean(fake_discriminator.d2))) + (0.25 * (-torch.mean(fake_discriminator.d3))) + (0.25 * (-torch.mean(fake_discriminator.d4)))
+            generator_distance = gan_loss(rgb_to_hsv(data['cycles']), fake_generated)
 
+            generator_loss = generator_loss + generator_distance
 
+            generator_loss.backward()
+
+            discriminator_loss.backward()
+
+            generator_optimizer.step()
+            discriminator_optimizer.step()
+            
 
