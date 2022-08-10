@@ -13,8 +13,9 @@ class Encoder(NN.Module):
         self.albedo_encoder = efficientnet_b7(use_pretrained)
         self.normal_encoder = efficientnet_b7(use_pretrained)
         self.emissive_encoder = efficientnet_b7(use_pretrained)
+        self.eevee_encoder = efficientnet_b7(use_pretrained)
 
-        self.layer_name_mapping = ['2', '3', '4', '6', '7']
+        self.layer_name_mapping = ['1', '2', '3', '4', '5', '6', '7']
 
     def forward(self, x):
         metalness_feature = {}
@@ -59,6 +60,14 @@ class Encoder(NN.Module):
             if name in self.layer_name_mapping:
                 emissive_feature[name] = emissive_f
 
-        return {'metalness': metalness_feature, 'roughness': roughness_feature, 'depth': depth_feature, 'albedo': albedo_feature, 'normal': normal_feature, 'emissive': emissive_feature}
+        eevee_feature = {}
+        eevee_f = x['eevee']
+        for name, module in self.eevee_encoder.features._modules.items():
+            eevee_f = module(eevee_f)
+            if name in self.layer_name_mapping:
+                eevee_feature[name] = eevee_f
+
+
+        return {'metalness': metalness_feature, 'roughness': roughness_feature, 'depth': depth_feature, 'albedo': albedo_feature, 'normal': normal_feature, 'emissive': emissive_feature, 'eevee': eevee_feature}
 
 
