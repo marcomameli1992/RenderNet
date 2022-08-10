@@ -88,7 +88,7 @@ for epoch in range(args.epochs):
 
             ## Generator Loss
             discriminator.requires_grad_(False)
-            generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1))) + (0.25 * (-torch.mean(fake_discriminator.d2))) + (0.25 * (-torch.mean(fake_discriminator.d3))) + (0.25 * (-torch.mean(fake_discriminator.d4)))
+            generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d2.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d3.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d4.detach())))
             generator_distance = gan_loss(rgb_to_hsv(data['cycles']), fake_generated)
 
             generator_loss = generator_loss + generator_distance
