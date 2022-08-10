@@ -74,10 +74,10 @@ for epoch in range(args.epochs):
             fake_discriminator = discriminator(hsv_to_rgb(fake_generated))
 
             ## Loss
-            discriminator_loss_1 = -(torch.mean(real_discriminator.d1) - torch.mean(fake_discriminator.d1))
-            discriminator_loss_2 = -(torch.mean(real_discriminator.d2) - torch.mean(fake_discriminator.d2))
-            discriminator_loss_3 = -(torch.mean(real_discriminator.d3) - torch.mean(fake_discriminator.d3))
-            discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
+            discriminator_loss_1 = discriminator_loss(real_discriminator.d1, fake_discriminator.d1)
+            discriminator_loss_2 = discriminator_loss(real_discriminator.d1, fake_discriminator.d1)
+            discriminator_loss_3 = discriminator_loss(real_discriminator.d1, fake_discriminator.d1)
+            discriminator_loss_4 = discriminator_loss(real_discriminator.d1, fake_discriminator.d1)
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
 
