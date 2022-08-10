@@ -72,7 +72,7 @@ for epoch in range(args.epochs):
             fake_generated = generator(data)
 
             fake_gen_noback = fake_generated.clone()
-            fake_discriminator = discriminator(hsv_to_rgb(fake_gen_noback.detahc()))
+            fake_discriminator = discriminator(hsv_to_rgb(fake_gen_noback.detach()))
 
             ## Discriminator Loss
             discriminator_loss_1 = -(torch.mean(real_discriminator.d1) - torch.mean(fake_discriminator.d1))
@@ -95,4 +95,4 @@ for epoch in range(args.epochs):
 
             generator_loss.backward()
             generator_optimizer.step()
-            discriminator.requires_grad_(True)        
+            discriminator.requires_grad_(True)
