@@ -81,7 +81,7 @@ for epoch in range(args.epochs):
             discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
-            discriminator_loss = discriminator_loss + gan_loss(real_discriminator, fake_discriminator)
+            discriminator_loss = (0.5 * discriminator_loss) + (0.5 * (gan_loss(real_discriminator.d1, fake_discriminator.d1) + gan_loss(real_discriminator.d2, fake_discriminator.d2) + gan_loss(real_discriminator.d3, fake_discriminator.d3) + gan_loss(real_discriminator.d4, fake_discriminator.d4)))
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
