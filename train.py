@@ -1,3 +1,5 @@
+import os
+from glob import glob
 import torch
 from torch import nn as NN
 from model.generator.Generator import Generator
@@ -7,11 +9,13 @@ from torch.utils.data import DataLoader
 
 from kornia.color import rgb_to_hsv, hsv_to_rgb
 
-from torchvision.transforms import Resize
+from torchvision.transforms import Resize, ToPILImage
 
 from tqdm import tqdm
 
 import argparse
+
+import neptune.new as neptune
 
 parser = argparse.ArgumentParser(description='RenderNet training script')
 
@@ -21,11 +25,26 @@ parser.add_argument('--epochs', type=int, default=10, metavar='E',)
 parser.add_argument('--lr', type=float, default=3e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
+parser.add_argument('--save_path', type=str, default=None, metavar='SP')
+parser.add_argument('--continue', type=argparse.SUPPRESS, metavar='C')
 
 args = parser.parse_args()
 
 #%%
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+## configure neptune
+run = neptune.init(
+    project="marcomameli1992/RenderNet",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkZWJkNDEyYS01NjI0LTRjMDAtODI5Yi0wMzI4NWU5NDc0ZmMifQ==",
+)  # your credentials
+
+if args.save_path == None:
+    save_path = './checkpoints/'
+else:
+    save_path = args.save_path
+
+os.makedirs(save_path, exist_ok=True)
 
 #%% Model construction
 generator = Generator(4480, 3) ##
@@ -54,7 +73,28 @@ discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=arg
 generator.train()
 discriminator.train()
 
-for epoch in range(args.epochs):
+params = {"learning_rate": args.lr, "discriminator_optimizer": "RMSProp", "generator_optimizer": "RMSProp", "batch_size": args.batch_size, "epochs": args.epochs, "gan_loss": args.gan_loss}
+run["parameters"] = params
+
+image_transform = ToPILImage()
+
+if ('continue' in args) and (len(os.listdir(save_path)) > 0):
+    print('Continue from checkpoint')
+    list_of_checkpoints = glob(save_path + '/*.pth')
+    latest_checkpoint = max(list_of_checkpoints, key=os.path.getctime)
+    print('Loading checkpoint: {}'.format(latest_checkpoint))
+    checkpoint = torch.load(latest_checkpoint)
+    generator.load_state_dict(checkpoint['generator_state_dict'])
+    discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
+    generator_optimizer.load_state_dict(checkpoint['generator_optimizer_state_dict'])
+    discriminator_optimizer.load_state_dict(checkpoint['discriminator_optimizer_state_dict'])
+    s_epoch = checkpoint['epoch']
+    print('Loaded checkpoint at epoch: {}'.format(s_epoch))
+else:
+    print('No checkpoint found')
+    s_epoch = 0
+
+for epoch in range(s_epoch, args.epochs):
     with tqdm(dataloader, unit='batch') as tbatch:
         for data in tbatch:
 
@@ -74,6 +114,14 @@ for epoch in range(args.epochs):
             fake_gen_noback = fake_generated.clone()
             fake_discriminator = discriminator(hsv_to_rgb(fake_gen_noback.detach()))
 
+            for n in range(fake_generated.shape[0]):
+                fake_pillow = image_transform(fake_generated[n].cpu())
+                real_pillow = image_transform(data['cycles'][n].cpu())
+
+                run["fake_generated_" + str(n)].log(fake_pillow)
+                run["real_image_" + str(n)].log(real_pillow)
+
+
             ## Discriminator Loss
             discriminator_loss_1 = -(torch.mean(real_discriminator.d1) - torch.mean(fake_discriminator.d1))
             discriminator_loss_2 = -(torch.mean(real_discriminator.d2) - torch.mean(fake_discriminator.d2))
@@ -82,6 +130,8 @@ for epoch in range(args.epochs):
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
             discriminator_loss = (0.5 * discriminator_loss) + (0.5 * (gan_loss(real_discriminator.d1, fake_discriminator.d1) + gan_loss(real_discriminator.d2, fake_discriminator.d2) + gan_loss(real_discriminator.d3, fake_discriminator.d3) + gan_loss(real_discriminator.d4, fake_discriminator.d4)))
+
+            run["train/discriminator_loss"].log(discriminator_loss)
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
@@ -93,6 +143,20 @@ for epoch in range(args.epochs):
 
             generator_loss = generator_loss + generator_distance
 
+            run["train/generator_loss"].log(generator_loss)
+
             generator_loss.backward()
             generator_optimizer.step()
             discriminator.requires_grad_(True)
+
+            torch.save({
+                'epoch': epoch,
+                'generator_state_dict': generator.state_dict(),
+                'discriminator_state_dict': discriminator.state_dict(),
+                'generator_optimizer_state_dict': generator_optimizer.state_dict(),
+                'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
+                'discriminator_loss': discriminator_loss,
+                'generator_loss': generator_loss,
+            }, os.path.join(save_path, 'checkpoint_' + str(epoch) + '.pth'))
+
+        run.stop()
