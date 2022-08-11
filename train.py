@@ -26,7 +26,7 @@ parser.add_argument('--lr', type=float, default=3e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
-parser.add_argument('--continue_train', action='store_true', metavar='C')
+parser.add_argument('--continue_train', action='store_true')
 
 args = parser.parse_args()
 
