@@ -26,7 +26,7 @@ parser.add_argument('--lr', type=float, default=3e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
-parser.add_argument('--continue', type=argparse.SUPPRESS, metavar='C')
+parser.add_argument('--continue_train', action='store_true', metavar='C')
 
 args = parser.parse_args()
 
@@ -78,7 +78,7 @@ run["parameters"] = params
 
 image_transform = ToPILImage()
 
-if ('continue' in args) and (len(os.listdir(save_path)) > 0):
+if args.continue_train and (len(os.listdir(save_path)) > 0):
     print('Continue from checkpoint')
     list_of_checkpoints = glob(save_path + '/*.pth')
     latest_checkpoint = max(list_of_checkpoints, key=os.path.getctime)
