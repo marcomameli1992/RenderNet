@@ -96,7 +96,7 @@ else:
 
 for epoch in range(s_epoch, args.epochs):
     with tqdm(dataloader, unit='batch') as tbatch:
-        for data in tbatch:
+        for i, data in enumerate(tbatch):
 
             for key in data.keys():
                 data[key] = data[key].to(device)
@@ -118,8 +118,8 @@ for epoch in range(s_epoch, args.epochs):
                 fake_pillow = image_transform(fake_generated[n].cpu())
                 real_pillow = image_transform(data['cycles'][n].cpu())
 
-                run["fake_generated_" + str(n)].log(fake_pillow)
-                run["real_image_" + str(n)].log(real_pillow)
+                run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
+                run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
 
 
             ## Discriminator Loss
