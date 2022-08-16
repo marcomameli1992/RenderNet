@@ -159,4 +159,5 @@ for epoch in range(s_epoch, args.epochs):
                 'generator_loss': generator_loss,
             }, os.path.join(save_path, 'checkpoint_' + str(epoch) + '.pth'))
 
-        run.stop()
+
+run.stop()
