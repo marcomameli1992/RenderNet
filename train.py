@@ -112,13 +112,14 @@ for epoch in range(s_epoch, args.epochs):
             fake_generated = generator(data)
 
             fake_gen_noback = fake_generated.clone()
-            fake_discriminator = discriminator(hsv_to_rgb(fake_gen_noback.detach()))
+            fake_gen_noback = fake_gen_noback.detach()#hsv_to_rgb(fake_gen_noback.detach())
+            fake_discriminator = discriminator(fake_gen_noback)
 
             for n in range(fake_generated.shape[0]):
                 fake_pillow = image_transform(fake_generated[n].cpu())
                 real_pillow = image_transform(data['cycles'][n].cpu())
 
-                run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow.convert(mode='RGB'))
+                run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
                 run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
 
 

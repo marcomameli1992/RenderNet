@@ -39,14 +39,23 @@ class RenderDataset(Dataset):
         totensor = ToTensor()
 
         # To tensor convertions
-        eevee_image = rgb_to_hsv(totensor(eevee_image))
-        albedo_image = rgb_to_hsv(totensor(albedo_image))
+        # eevee_image = rgb_to_hsv(totensor(eevee_image))
+        # albedo_image = rgb_to_hsv(totensor(albedo_image))
+        # depth_image = totensor(depth_image)
+        # position_image = rgb_to_hsv(totensor(position_image))
+        # normal_image = rgb_to_hsv(totensor(normal_image))
+        # metalness_image = totensor(metalness_image)
+        # roughness_image = totensor(roughness_image)
+        # emissive_image = rgb_to_hsv(totensor(emissive_image))
+        # cycles_image = totensor(cycles_image)
+        eevee_image = totensor(eevee_image)
+        albedo_image = totensor(albedo_image)
         depth_image = totensor(depth_image)
-        position_image = rgb_to_hsv(totensor(position_image))
-        normal_image = rgb_to_hsv(totensor(normal_image))
+        position_image = totensor(position_image)
+        normal_image = totensor(normal_image)
         metalness_image = totensor(metalness_image)
         roughness_image = totensor(roughness_image)
-        emissive_image = rgb_to_hsv(totensor(emissive_image))
+        emissive_image = totensor(emissive_image)
         cycles_image = totensor(cycles_image)
 
         # applico le trasformazioni
