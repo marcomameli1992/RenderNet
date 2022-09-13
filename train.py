@@ -119,8 +119,11 @@ for epoch in range(s_epoch, args.epochs):
                 fake_pillow = image_transform(fake_generated[n].cpu())
                 real_pillow = image_transform(data['cycles'][n].cpu())
 
-                run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
-                run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
+                fake_pillow.save('fake_{}_{}.png'.format(epoch, n))
+                real_pillow.save('real_{}_{}.png'.format(epoch, n))
+
+                #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
+                #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
 
 
             ## Discriminator Loss
