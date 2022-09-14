@@ -119,7 +119,7 @@ for epoch in range(s_epoch, args.epochs):
                 fake_pillow = image_transform(fake_generated[n].cpu())
                 real_pillow = image_transform(data['cycles'][n].cpu())
 
-                fake_pillow.save('fake_{}_{}.png'.format(epoch, n))
+                fake_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch),'fake_{}.png'.format(n)))
                 real_pillow.save('real_{}_{}.png'.format(epoch, n))
 
                 #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
@@ -161,7 +161,7 @@ for epoch in range(s_epoch, args.epochs):
                 'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
                 'discriminator_loss': discriminator_loss,
                 'generator_loss': generator_loss,
-            }, os.path.join(save_path, 'checkpoint_' + str(epoch) + '.pth'))
+            }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
 
 
 run.stop()
