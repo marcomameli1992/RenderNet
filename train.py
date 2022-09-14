@@ -119,8 +119,10 @@ for epoch in range(s_epoch, args.epochs):
                 fake_pillow = image_transform(fake_generated[n].cpu())
                 real_pillow = image_transform(data['cycles'][n].cpu())
 
+                os.makedirs(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch)), exist_ok=True)
+
                 fake_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch),'fake_{}.png'.format(n)))
-                real_pillow.save('real_{}_{}.png'.format(epoch, n))
+                real_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch),'real_{}.png'.format(n)))
 
                 #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
                 #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
@@ -152,6 +154,8 @@ for epoch in range(s_epoch, args.epochs):
             generator_loss.backward()
             generator_optimizer.step()
             discriminator.requires_grad_(True)
+
+            os.makedirs(os.path.join(save_path, 'state'), exist_ok=True)
 
             torch.save({
                 'epoch': epoch,
