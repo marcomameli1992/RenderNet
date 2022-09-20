@@ -110,14 +110,31 @@ class RenderDataset(Dataset):
             # print("Faccio resize")
 
             eevee_image = self.transform(eevee_image)
-            albedo_image = self.transform(albedo_image)
-            depth_image = self.transform(depth_image)
-            position_image = self.transform(position_image)
-            normal_image = self.transform(normal_image)
-            metalness_image = self.transform(metalness_image)
-            roughness_image = self.transform(roughness_image)
-            emissive_image = self.transform(emissive_image)
-            position_image = self.transform(position_image)
+            if self.get_all:
+                albedo_image = self.transform(albedo_image)
+                depth_image = self.transform(depth_image)
+                position_image = self.transform(position_image)
+                normal_image = self.transform(normal_image)
+                metalness_image = self.transform(metalness_image)
+                roughness_image = self.transform(roughness_image)
+                emissive_image = self.transform(emissive_image)
+                position_image = self.transform(position_image)
+            if self.get_albedo:
+                albedo_image = self.transform(albedo_image)
+            if self.get_depth:
+                depth_image = self.transform(depth_image)
+            if self.get_position:
+                position_image = self.transform(position_image)
+            if self.get_normal:
+                normal_image = self.transform(normal_image)
+            if self.get_metalness:
+                metalness_image = self.transform(metalness_image)
+            if self.get_roughness:
+                roughness_image = self.transform(roughness_image)
+            if self.get_emissive:
+                emissive_image = self.transform(emissive_image)
+            if self.get_position:
+                position_image = self.transform(position_image)
             cycles_image = self.transform(cycles_image)
 
         if self.get_all:
