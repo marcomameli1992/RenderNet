@@ -10,7 +10,7 @@ class Generator(NN.Module):
 
             super(Generator, self).__init__()
 
-            self.encoder = Encoder(use_all, use_albedo, use_depth, use_emissive, use_metalness, use_normal, use_roughness, use_position)
+            self.encoder = Encoder(use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position)
             self.squeeze_and_excitation_layer = OPS.SqueezeExcitation(input_channels=7680, squeeze_channels=7680, activation=NN.SiLU)
             self.decoder = Decoder(in_channels, out_channels)
 
