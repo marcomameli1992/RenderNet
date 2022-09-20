@@ -3,23 +3,32 @@ from torch import nn as NN
 
 class Decoder(NN.Module):
 
-    def __init__(self, in_channels, out_channels=3):
+    def __init__(self, in_channels, out_channels=3, multiplier=1):
 
         super(Decoder, self).__init__()
 
+        base_block_dimension = {
+            '6': 384,
+            '5': 224,
+            '4': 160,
+            '3': 80,
+            '2': 48,
+            '1': 32
+        }
+
         self.block7 = NN.ConvTranspose2d(in_channels, int(in_channels / 2), kernel_size=1, stride=1, padding=0)
         self.block7_1 = NN.Conv2d(int(in_channels / 2), int(in_channels / 2), kernel_size=1, stride=1, padding=0)
-        self.block6 = NN.ConvTranspose2d(4928, int(in_channels / 4), kernel_size=4, stride=1, padding=0, output_padding=1, dilation=2)
+        self.block6 = NN.ConvTranspose2d((int(in_channels / 2) + base_block_dimension['6'] * multiplier), int(in_channels / 4), kernel_size=4, stride=1, padding=0, output_padding=1, dilation=2)
         self.block6_1 = NN.Conv2d(int(in_channels / 4), int(in_channels / 4), kernel_size=1, stride=1, padding=0)
-        self.block5 = NN.ConvTranspose2d(2688, int(in_channels / 8), kernel_size=1, stride=1, padding=0)
+        self.block5 = NN.ConvTranspose2d((int(in_channels / 4) + base_block_dimension['5'] * multiplier), int(in_channels / 8), kernel_size=1, stride=1, padding=0)
         self.block5_1 = NN.Conv2d(int(in_channels / 8), int(in_channels / 8), kernel_size=1, stride=1, padding=0)
-        self.block4 = NN.ConvTranspose2d(1680, int(in_channels / 16), kernel_size=4, stride=2, padding=1)
+        self.block4 = NN.ConvTranspose2d((int(in_channels / 8) + base_block_dimension['4'] * multiplier), int(in_channels / 16), kernel_size=4, stride=2, padding=1)
         self.block4_1 = NN.Conv2d(int(in_channels / 16), int(in_channels / 16), kernel_size=1, stride=1, padding=0)
-        self.block3 = NN.ConvTranspose2d(840, int(in_channels / 32), kernel_size=4, stride=2, padding=1)
+        self.block3 = NN.ConvTranspose2d((int(in_channels / 16) + base_block_dimension['3'] * multiplier), int(in_channels / 32), kernel_size=4, stride=2, padding=1)
         self.block3_1 = NN.Conv2d(int(in_channels / 32), int(in_channels / 32), kernel_size=1, stride=1, padding=0)
-        self.block2 = NN.ConvTranspose2d(476, int(in_channels / 64), kernel_size=4, stride=2, padding=1)
+        self.block2 = NN.ConvTranspose2d((int(in_channels / 32) + base_block_dimension['2'] * multiplier), int(in_channels / 64), kernel_size=4, stride=2, padding=1)
         self.block2_1 = NN.Conv2d(int(in_channels / 64), int(in_channels / 64), kernel_size=1, stride=1, padding=0)
-        self.block1 = NN.ConvTranspose2d(294, out_channels, kernel_size=4, stride=2, padding=1)
+        self.block1 = NN.ConvTranspose2d((int(in_channels / 64) + base_block_dimension['1'] * multiplier), out_channels, kernel_size=4, stride=2, padding=1)
         self.block1_1 = NN.Conv2d(out_channels, out_channels, kernel_size=1, stride=1, padding=0)
 
 
