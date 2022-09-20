@@ -96,10 +96,10 @@ if args.use_position:
     use_position = True
     multiplier += 1
 
-
+decoder_input_channels = 640 * multiplier
 
 #%% Model construction
-generator = Generator(4480, 3, use_all, use_albedo, use_depth, use_emissive, use_metalness, use_normal, use_roughness, use_position) ##
+generator = Generator(decoder_input_channels, 3, use_all, use_albedo, use_depth, use_emissive, use_metalness, use_normal, use_roughness, use_position) ##
 discriminator = PerceptualDiscriminator()
 
 generator.to(device)
