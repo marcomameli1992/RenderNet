@@ -27,11 +27,24 @@ parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
 parser.add_argument('--continue_train', action='store_true')
+parser.add_argument('--use_all', action='store_true')
+parser.add_argument('--use_albedo', action='store_true')
+parser.add_argument('--use_normal', action='store_true')
+parser.add_argument('--use_depth', action='store_true')
+parser.add_argument('--use_emissive', action='store_true')
+parser.add_argument('--use_metalness', action='store_true')
+parser.add_argument('--use_roughness', action='store_true')
+parser.add_argument('--use_position', action='store_true')
+
 
 args = parser.parse_args()
 
 #%%
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.has_mps:
+    print('Using MPS')
+    device = torch.device('mps')
+else:
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## configure neptune
 run = neptune.init(
@@ -46,8 +59,47 @@ else:
 
 os.makedirs(save_path, exist_ok=True)
 
+#%%
+use_all = False
+use_albedo = False
+use_normal = False
+use_depth = False
+use_emissive = False
+use_metalness = False
+use_roughness = False
+use_position = False
+
+multiplier = 1
+
+if args.use_all:
+    use_all = True
+    multiplier += 1
+if args.use_albedo:
+    use_albedo = True
+    multiplier += 1
+if args.use_normal:
+    use_normal = True
+    multiplier += 1
+if args.use_depth:
+    use_depth = True
+    multiplier += 1
+if args.use_emissive:
+    use_emissive = True
+    multiplier += 1
+if args.use_metalness:
+    use_metalness = True
+    multiplier += 1
+if args.use_roughness:
+    use_roughness = True
+    multiplier += 1
+if args.use_position:
+    use_position = True
+    multiplier += 1
+
+
+
 #%% Model construction
-generator = Generator(4480, 3) ##
+generator = Generator(4480, 3, use_all, use_albedo, use_depth, use_emissive, use_metalness, use_normal, use_roughness, use_position) ##
 discriminator = PerceptualDiscriminator()
 
 generator.to(device)
@@ -55,7 +107,7 @@ discriminator.to(device)
 
 #%% dataset opening
 transform = Resize((224, 224))
-dataset = RenderDataset(args.data, args.image_folder, transform=transform)
+dataset = RenderDataset(args.data, args.image_folder, transform=transform, get_all=use_all, get_albedo=use_albedo, get_depth=use_depth, get_emissive=use_emissive, get_metalness=use_metalness, get_normal=use_normal, get_roughness=use_roughness, get_position=use_position)
 dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
 ## Loss definition
@@ -75,6 +127,7 @@ discriminator.train()
 
 params = {"learning_rate": args.lr, "discriminator_optimizer": "RMSProp", "generator_optimizer": "RMSProp", "batch_size": args.batch_size, "epochs": args.epochs, "gan_loss": args.gan_loss}
 run["parameters"] = params
+run["data"] = {"use_all": use_all, "use_albedo": use_albedo, "use_depth": use_depth, "use_emissive": use_emissive, "use_metalness": use_metalness, "use_normal": use_normal, "use_roughness": use_roughness, "use_position": use_position}
 
 image_transform = ToPILImage()
 
