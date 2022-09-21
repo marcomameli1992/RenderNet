@@ -149,7 +149,7 @@ else:
     print('No checkpoint found')
     s_epoch = 0
 
-epoch_bar = tqdm(total=args.epochs, initial=s_epoch, desc='Epoch', position=0)
+epoch_bar = tqdm(total=args.epochs, initial=s_epoch, desc='Epoch', position=0, unit='epoch')
 for epoch in range(s_epoch, args.epochs):
     with tqdm(dataloader, unit='batch', desc='Batch', position=1) as tbatch:
         for i, data in enumerate(tbatch):
