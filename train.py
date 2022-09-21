@@ -171,18 +171,6 @@ for epoch in range(s_epoch, args.epochs):
             fake_gen_noback = fake_gen_noback.detach()#hsv_to_rgb(fake_gen_noback.detach())
             fake_discriminator = discriminator(fake_gen_noback)
 
-            for n in range(fake_generated.shape[0]):
-                fake_pillow = image_transform(fake_generated[n].cpu())
-                real_pillow = image_transform(data['cycles'][n].cpu())
-
-                os.makedirs(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch)), exist_ok=True)
-
-                fake_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch),'fake_{}.png'.format(n)))
-                real_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch),'real_{}.png'.format(n)))
-
-                #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
-                #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
-
 
             ## Discriminator Loss
             discriminator_loss_1 = -(torch.mean(real_discriminator.d1) - torch.mean(fake_discriminator.d1))
@@ -212,6 +200,20 @@ for epoch in range(s_epoch, args.epochs):
             discriminator.requires_grad_(True)
 
             os.makedirs(os.path.join(save_path, 'state'), exist_ok=True)
+
+    if epoch % 50 == 0:
+        for n in range(fake_generated.shape[0]):
+            fake_pillow = image_transform(fake_generated[n].cpu())
+            real_pillow = image_transform(data['cycles'][n].cpu())
+
+            os.makedirs(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch)), exist_ok=True)
+
+            fake_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'fake_{}.png'.format(n)))
+            real_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'real_{}.png'.format(n)))
+
+            #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
+            #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
+
 
     torch.save({
         'epoch': epoch,
