@@ -26,6 +26,7 @@ parser.add_argument('--lr', type=float, default=3e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
+parser.add_argument('--workers', type=int, default=2, help='number of data loading workers')
 parser.add_argument('--continue_train', action='store_true')
 parser.add_argument('--use_all', action='store_true')
 parser.add_argument('--use_albedo', action='store_true')
@@ -109,7 +110,7 @@ discriminator.to(device)
 #%% dataset opening
 transform = Resize((224, 224))
 dataset = RenderDataset(args.data, args.image_folder, transform=transform, get_all=use_all, get_albedo=use_albedo, get_depth=use_depth, get_emissive=use_emissive, get_metalness=use_metalness, get_normal=use_normal, get_roughness=use_roughness, get_position=use_position)
-dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
 ## Loss definition
 if args.gan_loss == 'mse':
