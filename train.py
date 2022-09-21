@@ -98,6 +98,7 @@ if args.use_position:
 
 decoder_input_channels = 640 * multiplier
 
+
 #%% Model construction
 generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
 discriminator = PerceptualDiscriminator()
@@ -147,8 +148,9 @@ else:
     print('No checkpoint found')
     s_epoch = 0
 
+epoch_bar = tqdm(total=args.epochs - s_epoch, desc='Epoch', position=s_epoch)
 for epoch in range(s_epoch, args.epochs):
-    with tqdm(dataloader, unit='batch') as tbatch:
+    with tqdm(dataloader, unit='batch', desc='Batch') as tbatch:
         for i, data in enumerate(tbatch):
 
             for key in data.keys():
@@ -210,15 +212,17 @@ for epoch in range(s_epoch, args.epochs):
 
             os.makedirs(os.path.join(save_path, 'state'), exist_ok=True)
 
-            torch.save({
-                'epoch': epoch,
-                'generator_state_dict': generator.state_dict(),
-                'discriminator_state_dict': discriminator.state_dict(),
-                'generator_optimizer_state_dict': generator_optimizer.state_dict(),
-                'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
-                'discriminator_loss': discriminator_loss,
-                'generator_loss': generator_loss,
-            }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
+    torch.save({
+        'epoch': epoch,
+        'generator_state_dict': generator.state_dict(),
+        'discriminator_state_dict': discriminator.state_dict(),
+        'generator_optimizer_state_dict': generator_optimizer.state_dict(),
+        'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
+        'discriminator_loss': discriminator_loss,
+        'generator_loss': generator_loss,
+    }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
+
+    epoch_bar.update(1)
 
 
 run.stop()
