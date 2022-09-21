@@ -133,8 +133,6 @@ class RenderDataset(Dataset):
                 roughness_image = self.transform(roughness_image)
             if self.get_emissive:
                 emissive_image = self.transform(emissive_image)
-            if self.get_position:
-                position_image = self.transform(position_image)
             cycles_image = self.transform(cycles_image)
 
         if self.get_all:
