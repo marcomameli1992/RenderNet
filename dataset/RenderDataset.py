@@ -86,7 +86,6 @@ class RenderDataset(Dataset):
             metalness_image = totensor(metalness_image)
             roughness_image = totensor(roughness_image)
             emissive_image = totensor(emissive_image)
-            position_image = totensor(position_image)
         if self.get_albedo:
             albedo_image = totensor(albedo_image)
         if self.get_depth:
@@ -101,8 +100,6 @@ class RenderDataset(Dataset):
             roughness_image = totensor(roughness_image)
         if self.get_emissive:
             emissive_image = totensor(emissive_image)
-        if self.get_position:
-            position_image = totensor(position_image)
         cycles_image = totensor(cycles_image)
 
         # applico le trasformazioni
@@ -118,7 +115,6 @@ class RenderDataset(Dataset):
                 metalness_image = self.transform(metalness_image)
                 roughness_image = self.transform(roughness_image)
                 emissive_image = self.transform(emissive_image)
-                position_image = self.transform(position_image)
             if self.get_albedo:
                 albedo_image = self.transform(albedo_image)
             if self.get_depth:
