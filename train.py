@@ -74,7 +74,7 @@ multiplier = 1
 
 if args.use_all:
     use_all = True
-    multiplier += 1
+    multiplier += 7
 if args.use_albedo:
     use_albedo = True
     multiplier += 1
