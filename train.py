@@ -213,8 +213,7 @@ for epoch in range(s_epoch, args.epochs):
 
             #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
             #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
-
-
+    if epoch % 25 == 0:
         torch.save({
             'epoch': epoch,
             'generator_state_dict': generator.state_dict(),
