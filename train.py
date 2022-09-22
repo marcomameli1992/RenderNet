@@ -215,15 +215,15 @@ for epoch in range(s_epoch, args.epochs):
             #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
 
 
-    torch.save({
-        'epoch': epoch,
-        'generator_state_dict': generator.state_dict(),
-        'discriminator_state_dict': discriminator.state_dict(),
-        'generator_optimizer_state_dict': generator_optimizer.state_dict(),
-        'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
-        'discriminator_loss': discriminator_loss,
-        'generator_loss': generator_loss,
-    }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
+        torch.save({
+            'epoch': epoch,
+            'generator_state_dict': generator.state_dict(),
+            'discriminator_state_dict': discriminator.state_dict(),
+            'generator_optimizer_state_dict': generator_optimizer.state_dict(),
+            'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
+            'discriminator_loss': discriminator_loss,
+            'generator_loss': generator_loss,
+        }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
 
     epoch_bar.update(1)
 
