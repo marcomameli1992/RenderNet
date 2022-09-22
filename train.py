@@ -135,7 +135,7 @@ image_transform = ToPILImage()
 
 if args.continue_train and (len(os.listdir(save_path)) > 0):
     print('Continue from checkpoint')
-    list_of_checkpoints = glob(save_path + '/*.pth')
+    list_of_checkpoints = glob(os.path.join(save_path, 'state') + '/*.pth')
     latest_checkpoint = max(list_of_checkpoints, key=os.path.getctime)
     print('Loading checkpoint: {}'.format(latest_checkpoint))
     checkpoint = torch.load(latest_checkpoint)
