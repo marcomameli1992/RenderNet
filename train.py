@@ -7,6 +7,8 @@ from dataset.RenderDataset import RenderDataset
 from model.discriminator.Discriminator import PerceptualDiscriminator
 from torch.utils.data import DataLoader
 
+from torchmetrics.image import StructuralSimilarityIndexMeasure, MultiScaleStructuralSimilarityIndexMeasure, UniversalImageQualityIndex
+
 from kornia.color import rgb_to_hsv, hsv_to_rgb
 
 from torchvision.transforms import Resize, ToPILImage
@@ -120,6 +122,10 @@ elif args.gan_loss == 'bce':
 
 discriminator_loss = NN.L1Loss()
 
+similarity_loss1 = StructuralSimilarityIndexMeasure()
+similarity_loss2 = MultiScaleStructuralSimilarityIndexMeasure()
+similarity_loss3 = UniversalImageQualityIndex()
+
 ## Optimizator
 generator_optimizer = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
 discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr)
@@ -157,7 +163,6 @@ for epoch in range(s_epoch, args.epochs):
             for key in data.keys():
                 data[key] = data[key].to(device)
 
-
             generator_optimizer.zero_grad()
             discriminator_optimizer.zero_grad()
 
@@ -189,11 +194,18 @@ for epoch in range(s_epoch, args.epochs):
             ## Generator Loss
             discriminator.requires_grad_(False)
             generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d2.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d3.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d4.detach())))
-            generator_distance = gan_loss(rgb_to_hsv(data['cycles']), fake_generated)
+            generator_distance = gan_loss(data['cycles'], fake_generated)
 
-            generator_loss = generator_loss + generator_distance
+            similarity_loss1 = similarity_loss1(data['cycles'], fake_generated)
+            similarity_loss2 = similarity_loss2(data['cycles'], fake_generated)
+            similarity_loss3 = similarity_loss3(data['cycles'], fake_generated)
+
+            generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * similarity_loss1) + (0.2 * similarity_loss2) + (0.2 * similarity_loss3)
 
             run["train/generator_loss"].log(generator_loss)
+            run["train/SSIM"].log(similarity_loss1)
+            run["train/MSSSIM"].log(similarity_loss2)
+            run["train/UIQI"].log(similarity_loss3)
 
             generator_loss.backward()
             generator_optimizer.step()
