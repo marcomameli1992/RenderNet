@@ -123,7 +123,7 @@ elif args.gan_loss == 'bce':
 discriminator_loss = NN.L1Loss()
 
 similarity_loss1 = StructuralSimilarityIndexMeasure()
-similarity_loss2 = MultiScaleStructuralSimilarityIndexMeasure()
+similarity_loss2 = MultiScaleStructuralSimilarityIndexMeasure(normalize='relu')
 similarity_loss3 = UniversalImageQualityIndex()
 
 ## Optimizator
