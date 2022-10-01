@@ -194,11 +194,11 @@ for epoch in range(s_epoch, args.epochs):
             generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d2.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d3.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d4.detach())))
             generator_distance = gan_loss(data['cycles'], fake_generated)
 
-            similarity_loss1 = similarity_loss1(data['cycles'], fake_generated)
-            similarity_loss2 = similarity_loss2(data['cycles'], fake_generated, normalize='relu')
-            similarity_loss3 = similarity_loss3(data['cycles'], fake_generated)
+            s_loss1 = similarity_loss1(data['cycles'], fake_generated)
+            s_loss2 = similarity_loss2(data['cycles'], fake_generated, normalize='relu')
+            s_loss3 = similarity_loss3(data['cycles'], fake_generated)
 
-            generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * similarity_loss1) + (0.2 * similarity_loss2) + (0.2 * similarity_loss3)
+            generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * s_loss1) + (0.2 * s_loss2) + (0.2 * s_loss3)
 
             run["train/generator_loss"].log(generator_loss)
             run["train/SSIM"].log(similarity_loss1)
