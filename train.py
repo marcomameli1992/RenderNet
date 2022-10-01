@@ -213,7 +213,7 @@ for epoch in range(s_epoch, args.epochs):
 
             os.makedirs(os.path.join(save_path, 'state'), exist_ok=True)
 
-    if epoch % 50 == 0:
+    if epoch % 50 == 0 or (epoch + 1) % 50 == 0:
         for n in range(fake_generated.shape[0]):
             fake_pillow = image_transform(fake_generated[n].cpu())
             real_pillow = image_transform(data['cycles'][n].cpu())
@@ -225,7 +225,7 @@ for epoch in range(s_epoch, args.epochs):
 
             #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
             #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
-    if epoch % 25 == 0:
+    if epoch > 250 and epoch % 25 == 0:
         torch.save({
             'epoch': epoch,
             'generator_state_dict': generator.state_dict(),
