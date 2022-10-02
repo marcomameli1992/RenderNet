@@ -182,7 +182,7 @@ for epoch in range(s_epoch, args.epochs):
             discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
-            discriminator_loss = (0.5 * discriminator_loss) + (0.5 * (gan_loss(real_discriminator.d1, fake_discriminator.d1) + gan_loss(real_discriminator.d2, fake_discriminator.d2) + gan_loss(real_discriminator.d3, fake_discriminator.d3) + gan_loss(real_discriminator.d4, fake_discriminator.d4)))
+            discriminator_loss = (0.55 * discriminator_loss) + (0.35 * (gan_loss(real_discriminator.d1, fake_discriminator.d1) + gan_loss(real_discriminator.d2, fake_discriminator.d2) + gan_loss(real_discriminator.d3, fake_discriminator.d3) + gan_loss(real_discriminator.d4, fake_discriminator.d4)))
 
             run["train/discriminator_loss"].log(discriminator_loss)
 
@@ -201,9 +201,9 @@ for epoch in range(s_epoch, args.epochs):
             generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * s_loss1) + (0.2 * s_loss2) + (0.2 * s_loss3)
 
             run["train/generator_loss"].log(generator_loss)
-            run["train/SSIM"].log(similarity_loss1)
-            run["train/MSSSIM"].log(similarity_loss2)
-            run["train/UIQI"].log(similarity_loss3)
+            run["train/SSIM"].log(s_loss1)
+            run["train/MSSSIM"].log(s_loss2)
+            run["train/UIQI"].log(s_loss3)
 
             generator_loss.backward()
             generator_optimizer.step()
