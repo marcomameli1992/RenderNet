@@ -116,7 +116,7 @@ dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_
 if args.gan_loss == 'mse':
     gan_loss = NN.MSELoss()
 elif args.gan_loss == 'bce':
-    gan_loss = NN.BCEWithLogitsLoss()
+    gan_loss = NN.L1Loss()
 
 discriminator_loss = NN.L1Loss()
 
