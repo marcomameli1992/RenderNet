@@ -201,9 +201,9 @@ for epoch in range(s_epoch, args.epochs):
             generator_loss = (0.2 * generator_loss) + (0.5 * generator_distance) + (0.5 * (1/s_loss1)) + (0.45 * (1/s_loss2)) + (0.25 * (1/s_loss3))
 
             run["train/generator_loss"].log(generator_loss)
-            run["train/SSIM"].log(s_loss1)
-            run["train/MSSSIM"].log(s_loss2)
-            run["train/UIQI"].log(s_loss3)
+            run["train/SSIM"].log(-1 if torch.isnan(s_loss1) else s_loss1)
+            run["train/MSSSIM"].log(-1 if torch.isnan(s_loss2) else s_loss2)
+            run["train/UIQI"].log(-1 if torch.isnan(s_loss3) else s_loss3)
 
             generator_loss.backward()
             generator_optimizer.step()
