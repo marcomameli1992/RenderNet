@@ -198,7 +198,7 @@ for epoch in range(s_epoch, args.epochs):
             s_loss2 = similarity_loss2(data['cycles'], fake_generated, normalize='relu')
             s_loss3 = similarity_loss3(data['cycles'], fake_generated)
 
-            generator_loss = (0.2 * generator_loss) + (0.5 * generator_distance) + (0.5 * s_loss1) + (0.45 * s_loss2) + (0.25 * s_loss3)
+            generator_loss = (0.2 * generator_loss) + (0.5 * generator_distance) + (0.5 * (1/s_loss1)) + (0.45 * (1/s_loss2)) + (0.25 * (1/s_loss3))
 
             run["train/generator_loss"].log(generator_loss)
             run["train/SSIM"].log(s_loss1)
