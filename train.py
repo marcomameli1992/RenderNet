@@ -36,7 +36,7 @@ parser.add_argument('--use_emissive', action='store_true')
 parser.add_argument('--use_metalness', action='store_true')
 parser.add_argument('--use_roughness', action='store_true')
 parser.add_argument('--use_position', action='store_true')
-
+parser.add_argument('--save_from', type=int, default=250, help='the epoch to start saving')
 
 args = parser.parse_args()
 
@@ -198,7 +198,7 @@ for epoch in range(s_epoch, args.epochs):
             s_loss2 = similarity_loss2(data['cycles'], fake_generated, normalize='relu')
             s_loss3 = similarity_loss3(data['cycles'], fake_generated)
 
-            generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * s_loss1) + (0.2 * s_loss2) + (0.2 * s_loss3)
+            generator_loss = (0.2 * generator_loss) + (0.5 * generator_distance) + (0.5 * s_loss1) + (0.45 * s_loss2) + (0.25 * s_loss3)
 
             run["train/generator_loss"].log(generator_loss)
             run["train/SSIM"].log(s_loss1)
@@ -223,7 +223,7 @@ for epoch in range(s_epoch, args.epochs):
 
             #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
             #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
-    if (epoch > 250 and epoch % 25 == 0) or epoch == (args.epochs - 1):
+    if (epoch > args.save_from and epoch % 25 == 0) or epoch == (args.epochs - 1):
         torch.save({
             'epoch': epoch,
             'generator_state_dict': generator.state_dict(),
