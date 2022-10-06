@@ -150,4 +150,15 @@ class RenderDataset(Dataset):
             return_dict['emissive'] = emissive_image
         if self.get_position:
             return_dict['position'] = position_image
+
+        assert torch.isnan(eevee_image).sum() == 0
+        assert torch.isnan(cycles_image).sum() == 0
+        assert torch.isnan(albedo_image).sum() == 0
+        assert torch.isnan(depth_image).sum() == 0
+        assert torch.isnan(position_image).sum() == 0
+        assert torch.isnan(normal_image).sum() == 0
+        assert torch.isnan(metalness_image).sum() == 0
+        assert torch.isnan(roughness_image).sum() == 0
+        assert torch.isnan(emissive_image).sum() == 0
+        
         return return_dict
