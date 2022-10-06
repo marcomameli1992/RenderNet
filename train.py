@@ -119,7 +119,7 @@ if args.gan_loss == 'mse':
 elif args.gan_loss == 'bce':
     gan_loss = NN.L1Loss()
 
-discriminator_loss = NN.L1Loss()
+discriminator_loss = NN.SmoothL1Loss()
 g_loss = NN.SmoothL1Loss()
 
 similarity_loss1 = structural_similarity_index_measure
@@ -191,7 +191,7 @@ for epoch in range(s_epoch, args.epochs):
                                           g_loss(real_discriminator.d3, fake_discriminator.d3) +
                                           g_loss(real_discriminator.d4, fake_discriminator.d4)))
 
-            run["train/discriminator_loss"].log(discriminator_loss)
+            run["train/discriminator_loss"].log(10 if torch.isnan(discriminator_loss) else discriminator_loss.item())
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
@@ -210,8 +210,8 @@ for epoch in range(s_epoch, args.epochs):
 
             generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * (1/s_loss1)) + (0.2 * (1/s_loss2)) + (0.2 * (1/s_loss3))
 
-            run["train/generator_loss"].log(generator_loss)
-            run["train/generator_distance"].log(generator_distance)
+            run["train/generator_loss"].log(10 if torch.isnan(generator_loss) else generator_loss)
+            run["train/generator_distance"].log(10 if torch.isnan(generator_distance) else generator_distance)
             run["train/SSIM"].log(-1 if torch.isnan(s_loss1) else s_loss1)
             run["train/MSSSIM"].log(-1 if torch.isnan(s_loss2) else s_loss2)
             run["train/UIQI"].log(-1 if torch.isnan(s_loss3) else s_loss3)
