@@ -7,7 +7,8 @@ from dataset.RenderDataset import RenderDataset
 from model.discriminator.Discriminator import PerceptualDiscriminator
 from torch.utils.data import DataLoader
 
-from torchmetrics.functional import structural_similarity_index_measure, multiscale_structural_similarity_index_measure, universal_image_quality_index
+from torchmetrics.functional import structural_similarity_index_measure, multiscale_structural_similarity_index_measure, \
+    universal_image_quality_index, error_relative_global_dimensionless_synthesis
 
 from torchvision.transforms import Resize, ToPILImage
 
@@ -119,6 +120,7 @@ elif args.gan_loss == 'bce':
     gan_loss = NN.L1Loss()
 
 discriminator_loss = NN.L1Loss()
+g_loss = NN.MSELoss()
 
 similarity_loss1 = structural_similarity_index_measure
 similarity_loss2 = multiscale_structural_similarity_index_measure
@@ -182,7 +184,7 @@ for epoch in range(s_epoch, args.epochs):
             discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
-            discriminator_loss = (0.55 * discriminator_loss) + (0.35 * (gan_loss(real_discriminator.d1, fake_discriminator.d1) + gan_loss(real_discriminator.d2, fake_discriminator.d2) + gan_loss(real_discriminator.d3, fake_discriminator.d3) + gan_loss(real_discriminator.d4, fake_discriminator.d4)))
+            discriminator_loss = (0.35 * discriminator_loss) - (0.55 * (g_loss(real_discriminator.d1, fake_discriminator.d1) + g_loss(real_discriminator.d2, fake_discriminator.d2) + g_loss(real_discriminator.d3, fake_discriminator.d3) + g_loss(real_discriminator.d4, fake_discriminator.d4)))
 
             run["train/discriminator_loss"].log(discriminator_loss)
 
@@ -191,16 +193,20 @@ for epoch in range(s_epoch, args.epochs):
 
             ## Generator Loss
             discriminator.requires_grad_(False)
-            generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d2.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d3.detach()))) + (0.25 * (-torch.mean(fake_discriminator.d4.detach())))
+            generator_loss = (0.25 * (-(torch.mean(real_discriminator.d1.detach())) - torch.mean(fake_discriminator.d1.detach())))\
+                             + (0.25 * (-(torch.mean(real_discriminator.d2.detach())) - torch.mean(fake_discriminator.d2.detach()))) \
+                             + (0.25 * (-(torch.mean(real_discriminator.d3.detach())) - torch.mean(fake_discriminator.d3.detach()))) \
+                             + (0.25 * (-(torch.mean(real_discriminator.d4.detach())) - -torch.mean(fake_discriminator.d4.detach())))
             generator_distance = gan_loss(data['cycles'], fake_generated)
 
             s_loss1 = similarity_loss1(data['cycles'], fake_generated)
             s_loss2 = similarity_loss2(data['cycles'], fake_generated, normalize='relu')
             s_loss3 = similarity_loss3(data['cycles'], fake_generated)
 
-            generator_loss = (0.2 * generator_loss) + (0.5 * generator_distance) + (0.5 * (1/s_loss1)) + (0.45 * (1/s_loss2)) + (0.25 * (1/s_loss3))
+            generator_loss = (0.2 * generator_loss) + (0.2 * generator_distance) + (0.2 * (1/s_loss1)) + (0.2 * (1/s_loss2)) + (0.2 * (1/s_loss3))
 
             run["train/generator_loss"].log(generator_loss)
+            run["train/generator_distance"].log(generator_distance)
             run["train/SSIM"].log(-1 if torch.isnan(s_loss1) else s_loss1)
             run["train/MSSSIM"].log(-1 if torch.isnan(s_loss2) else s_loss2)
             run["train/UIQI"].log(-1 if torch.isnan(s_loss3) else s_loss3)
@@ -221,8 +227,8 @@ for epoch in range(s_epoch, args.epochs):
             fake_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'fake_{}.png'.format(n)))
             real_pillow.save(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'real_{}.png'.format(n)))
 
-            #run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
-            #run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
+            run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
+            run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
     if (epoch > args.save_from and epoch % 25 == 0) or epoch == (args.epochs - 1):
         torch.save({
             'epoch': epoch,
