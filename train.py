@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='RenderNet training script')
 parser.add_argument('--data', type=str, default=None, metavar='D',)
 parser.add_argument('--image_folder', type=str, default=None, metavar='F',)
 parser.add_argument('--epochs', type=int, default=10, metavar='E',)
-parser.add_argument('--lr', type=float, default=3e-5, metavar='LR',)
+parser.add_argument('--lr', type=float, default=5e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
@@ -127,8 +127,8 @@ similarity_loss2 = multiscale_structural_similarity_index_measure
 similarity_loss3 = universal_image_quality_index
 
 ## Optimizator
-generator_optimizer = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
-discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr)
+generator_optimizer = torch.optim.Adam(generator.parameters(), lr=args.lr)
+discriminator_optimizer = torch.optim.Adam(discriminator.parameters(), lr=args.lr)
 
 generator.train()
 discriminator.train()
@@ -183,8 +183,13 @@ for epoch in range(s_epoch, args.epochs):
             discriminator_loss_3 = -(torch.mean(real_discriminator.d3) - torch.mean(fake_discriminator.d3))
             discriminator_loss_4 = -(torch.mean(real_discriminator.d4) - torch.mean(fake_discriminator.d4))
 
-            discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
-            discriminator_loss = (0.35 * discriminator_loss) - (0.55 * (g_loss(real_discriminator.d1, fake_discriminator.d1) + g_loss(real_discriminator.d2, fake_discriminator.d2) + g_loss(real_discriminator.d3, fake_discriminator.d3) + g_loss(real_discriminator.d4, fake_discriminator.d4)))
+            discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + \
+                                 (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
+            discriminator_loss = (0.35 * discriminator_loss) + \
+                                 (0.55 * (g_loss(real_discriminator.d1, fake_discriminator.d1) +
+                                          g_loss(real_discriminator.d2, fake_discriminator.d2) +
+                                          g_loss(real_discriminator.d3, fake_discriminator.d3) +
+                                          g_loss(real_discriminator.d4, fake_discriminator.d4)))
 
             run["train/discriminator_loss"].log(discriminator_loss)
 
@@ -193,10 +198,10 @@ for epoch in range(s_epoch, args.epochs):
 
             ## Generator Loss
             discriminator.requires_grad_(False)
-            generator_loss = (0.25 * (-(torch.mean(real_discriminator.d1.detach())) - torch.mean(fake_discriminator.d1.detach())))\
-                             + (0.25 * (-(torch.mean(real_discriminator.d2.detach())) - torch.mean(fake_discriminator.d2.detach()))) \
-                             + (0.25 * (-(torch.mean(real_discriminator.d3.detach())) - torch.mean(fake_discriminator.d3.detach()))) \
-                             + (0.25 * (-(torch.mean(real_discriminator.d4.detach())) - -torch.mean(fake_discriminator.d4.detach())))
+            generator_loss = (0.25 * (-torch.mean(fake_discriminator.d1.detach())))\
+                             + (0.25 * (-torch.mean(fake_discriminator.d2.detach()))) \
+                             + (0.25 * (-torch.mean(fake_discriminator.d3.detach()))) \
+                             + (0.25 * (-torch.mean(fake_discriminator.d4.detach())))
             generator_distance = gan_loss(data['cycles'], fake_generated)
 
             s_loss1 = similarity_loss1(data['cycles'], fake_generated)
