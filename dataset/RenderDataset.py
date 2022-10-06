@@ -160,5 +160,5 @@ class RenderDataset(Dataset):
         assert torch.isnan(metalness_image).sum() == 0
         assert torch.isnan(roughness_image).sum() == 0
         assert torch.isnan(emissive_image).sum() == 0
-        
+
         return return_dict

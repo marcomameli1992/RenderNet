@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='RenderNet training script')
 parser.add_argument('--data', type=str, default=None, metavar='D',)
 parser.add_argument('--image_folder', type=str, default=None, metavar='F',)
 parser.add_argument('--epochs', type=int, default=10, metavar='E',)
-parser.add_argument('--lr', type=float, default=5e-5, metavar='LR',)
+parser.add_argument('--lr', type=float, default=2e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
@@ -120,7 +120,7 @@ elif args.gan_loss == 'bce':
     gan_loss = NN.L1Loss()
 
 discriminator_loss = NN.L1Loss()
-g_loss = NN.MSELoss()
+g_loss = NN.SmoothL1Loss()
 
 similarity_loss1 = structural_similarity_index_measure
 similarity_loss2 = multiscale_structural_similarity_index_measure
