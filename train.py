@@ -185,8 +185,8 @@ for epoch in range(s_epoch, args.epochs):
 
             discriminator_loss = (0.25 * discriminator_loss_1) + (0.25 * discriminator_loss_2) + \
                                  (0.25 * discriminator_loss_3) + (0.25 * discriminator_loss_4)
-            discriminator_loss = (0.35 * discriminator_loss) + \
-                                 (0.55 * (g_loss(real_discriminator.d1, fake_discriminator.d1) +
+            discriminator_loss = (0.5 * discriminator_loss) + \
+                                 (0.5 * (g_loss(real_discriminator.d1, fake_discriminator.d1) +
                                           g_loss(real_discriminator.d2, fake_discriminator.d2) +
                                           g_loss(real_discriminator.d3, fake_discriminator.d3) +
                                           g_loss(real_discriminator.d4, fake_discriminator.d4)))
