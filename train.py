@@ -127,8 +127,8 @@ similarity_loss2 = multiscale_structural_similarity_index_measure
 similarity_loss3 = universal_image_quality_index
 
 ## Optimizator
-generator_optimizer = torch.optim.Adam(generator.parameters(), lr=args.lr)
-discriminator_optimizer = torch.optim.Adam(discriminator.parameters(), lr=args.lr)
+generator_optimizer = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
+discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr)
 
 generator.train()
 discriminator.train()
