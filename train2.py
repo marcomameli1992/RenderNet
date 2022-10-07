@@ -108,7 +108,7 @@ decoder_input_channels = 640 * multiplier
 #%% Model construction
 generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
 discriminator = Discriminator()
-perceptual_network = PerceptualLoss(network='vgg16', layers=['relu_1_2', 'relu_2_2', 'relu_3_3', 'relu_4_3'], use_gpu=True, gpu_ids=[0])
+perceptual_network = PerceptualLoss(network='vgg16', layers=['relu_1_2', 'relu_2_2', 'relu_3_3', 'relu_4_3'])
 
 generator.to(device)
 discriminator.to(device)
