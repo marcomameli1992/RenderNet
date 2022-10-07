@@ -102,27 +102,28 @@ if args.use_position:
 
 decoder_input_channels = 640 * multiplier
 
-def gradient_penalty(D, xr, xf):
-    """
-    :param D:
-    :param xr: [b, 2]
-    :param xf: [b, 2]
-    :return:
-    """
-    # [b, 1]
-    t = torch.rand(args.batch_size, 1).cuda()
-    # [b, 1] => [b, 2]  broadcasting so t is the same for x1 and x2
-    t = t.expand_as(xr)
-    # interpolation
-    mid = t * xr + (1 - t) * xf
-    # set it to require grad info
-    mid.requires_grad_()
-    pred = D(mid)
-    grads = torch.autograd.grad(outputs=pred, inputs=mid,
-                          grad_outputs=torch.ones_like(pred),
-                          create_graph=True, retain_graph=True, only_inputs=True)[0]
-    gp = torch.pow(grads.norm(2, dim=1) - 1, 2).mean()
-    return gp
+def calc_gradient_penalty(netD, real_data, fake_data):
+    # print "real_data: ", real_data.size(), fake_data.size()
+    alpha = torch.rand(args.batch_size, 1)
+    alpha = alpha.expand(args.batch_size, real_data.nelement()/args.batch_size).contiguous().view(args.batch_size, 3, 32, 32)
+    alpha = alpha.to(device)
+
+    interpolates = alpha * real_data + ((1 - alpha) * fake_data)
+
+    if netD.cuda():
+        interpolates = interpolates.cuda(device)
+    interpolates = torch.autograd.Variable(interpolates, requires_grad=True)
+
+    disc_interpolates = netD(interpolates)
+
+    gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates,
+                              grad_outputs=torch.ones(disc_interpolates.size()).cuda(gpu) if use_cuda else torch.ones(
+                                  disc_interpolates.size()),
+                              create_graph=True, retain_graph=True, only_inputs=True)[0]
+    gradients = gradients.view(gradients.size(0), -1)
+
+    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * 10
+    return gradient_penalty
 
 #%% Model construction
 generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
@@ -199,7 +200,7 @@ for epoch in range(s_epoch, args.epochs):
             discriminator_loss = -torch.mean(discriminator(data['cycles'])) + torch.mean(discriminator(fake_images))
 
 
-            gp = gradient_penalty(discriminator, data['cycles'], fake_images)
+            gp = calc_gradient_penalty(discriminator, data['cycles'], fake_images)
             discriminator_loss += 0.2 * gp
 
             run["train/discriminator_loss"].log(discriminator_loss.item())
