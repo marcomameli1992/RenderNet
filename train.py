@@ -4,7 +4,7 @@ import torch
 from torch import nn as NN
 from model.generator.Generator import Generator
 from dataset.RenderDataset import RenderDataset
-from model.discriminator.Discriminator import PerceptualDiscriminator
+from model.perceptual.Discriminator import PerceptualDiscriminator
 from torch.utils.data import DataLoader
 
 from torchmetrics.functional import structural_similarity_index_measure, multiscale_structural_similarity_index_measure, \
