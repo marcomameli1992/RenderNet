@@ -179,7 +179,7 @@ for epoch in range(s_epoch, args.epochs):
 
             discriminator_loss = -torch.mean(discriminator(data['cycles'])) + torch.mean(discriminator(fake_images))
 
-            run["train/perceptual_loss"].log(10 if torch.isnan(perceptual_loss) else perceptual_loss.item())
+            run["train/discriminator_loss"].log(10 if torch.isnan(discriminator_loss) else discriminator_loss.item())
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
