@@ -4,11 +4,9 @@ import torch
 from torch import nn as NN
 from model.generator.Generator import Generator
 from dataset.RenderDataset import RenderDataset
-from model.perceptual.PerceptualNetwork import PerceptualNetwork
 from model.perceptual.PerceptualNetwork2 import PerceptualLoss
 from torch.utils.data import DataLoader
 from model.discriminator.Discriminator import Discriminator
-import torch.nn.functional as F
 
 from torchmetrics.functional import structural_similarity_index_measure, multiscale_structural_similarity_index_measure, \
     universal_image_quality_index
@@ -26,7 +24,7 @@ parser = argparse.ArgumentParser(description='RenderNet training script')
 parser.add_argument('--data', type=str, default=None, metavar='D',)
 parser.add_argument('--image_folder', type=str, default=None, metavar='F',)
 parser.add_argument('--epochs', type=int, default=10, metavar='E',)
-parser.add_argument('--lr', type=float, default=2e-5, metavar='LR',)
+parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
@@ -41,7 +39,7 @@ parser.add_argument('--use_metalness', action='store_true')
 parser.add_argument('--use_roughness', action='store_true')
 parser.add_argument('--use_position', action='store_true')
 parser.add_argument('--save_from', type=int, default=250, help='the epoch to start saving')
-parser.add_argument('--n_critic', type=int, default=5, help='how much training the discriminator')
+parser.add_argument('--n_critic', type=int, default=3, help='how much training the discriminator')
 
 args = parser.parse_args()
 
@@ -104,6 +102,27 @@ if args.use_position:
 
 decoder_input_channels = 640 * multiplier
 
+def gradient_penalty(D, xr, xf):
+    """
+    :param D:
+    :param xr: [b, 2]
+    :param xf: [b, 2]
+    :return:
+    """
+    # [b, 1]
+    t = torch.rand(args.batch_size, 1).cuda()
+    # [b, 1] => [b, 2]  broadcasting so t is the same for x1 and x2
+    t = t.expand_as(xr)
+    # interpolation
+    mid = t * xr + (1 - t) * xf
+    # set it to require grad info
+    mid.requires_grad_()
+    pred = D(mid)
+    grads = torch.autograd.grad(outputs=pred, inputs=mid,
+                          grad_outputs=torch.ones_like(pred),
+                          create_graph=True, retain_graph=True, only_inputs=True)[0]
+    gp = torch.pow(grads.norm(2, dim=1) - 1, 2).mean()
+    return gp
 
 #%% Model construction
 generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
@@ -125,15 +144,15 @@ if args.gan_loss == 'mse':
 elif args.gan_loss == 'bce':
     gan_loss = NN.L1Loss()
 
-discriminator_loss = NN.BCEWithLogitsLoss()
+discriminator_loss = NN.BCELoss()
 
 similarity_loss1 = structural_similarity_index_measure
 similarity_loss2 = multiscale_structural_similarity_index_measure
 similarity_loss3 = universal_image_quality_index
 
 ## Optimizator
-generator_optimizer = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
-discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr)
+generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=args.lr, betas=(0.5, 0.999))
+discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=args.lr * 10, betas=(0.5, 0.999))
 
 generator.train()
 discriminator.train()
@@ -179,7 +198,7 @@ for epoch in range(s_epoch, args.epochs):
 
             discriminator_loss = -torch.mean(discriminator(data['cycles'])) + torch.mean(discriminator(fake_images))
 
-            run["train/discriminator_loss"].log(10 if torch.isnan(discriminator_loss) else discriminator_loss.item())
+            run["train/discriminator_loss"].log(discriminator_loss.item())
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
@@ -204,18 +223,17 @@ for epoch in range(s_epoch, args.epochs):
                 s_loss2 = similarity_loss2(data['cycles'], fake_images, normalize='relu')
                 s_loss3 = similarity_loss3(data['cycles'], fake_images)
                 generator_distance = gan_loss(data['cycles'], fake_images)
-                g_loss = 0.2 * generator_distance + 0.2 * perceptual_loss +\
-                         0.2 * (1/s_loss1) + 0.2 * (1/s_loss2) + 0.2 * (1/s_loss3)
+                g_loss = 0.5 * generator_distance + 0.5 * perceptual_loss
 
-                generator_loss = -torch.mean(discriminator(fake_images))
-                generator_loss += g_loss
+                generator_loss = -torch.mean(discriminator(fake_images)) * 0.5
+                generator_loss += g_loss * 0.5
 
-                run["train/generator_loss"].log(10 if torch.isnan(generator_loss) else generator_loss)
-                run["train/generator_distance"].log(10 if torch.isnan(generator_distance) else generator_distance)
-                run["train/SSIM"].log(-1 if torch.isnan(s_loss1) else s_loss1)
-                run["train/MSSSIM"].log(-1 if torch.isnan(s_loss2) else s_loss2)
-                run["train/UIQI"].log(-1 if torch.isnan(s_loss3) else s_loss3)
-                run["train/perceptual_loss"].log(10 if torch.isnan(perceptual_loss) else perceptual_loss.item())
+                run["train/generator_loss"].log(generator_loss)
+                run["train/generator_distance"].log(generator_distance)
+                run["train/SSIM"].log(s_loss1)
+                run["train/MSSSIM"].log(s_loss2)
+                run["train/UIQI"].log(s_loss3)
+                run["train/perceptual_loss"].log(perceptual_loss.item())
 
                 generator_loss.backward()
                 generator_optimizer.step()
