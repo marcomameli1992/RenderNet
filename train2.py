@@ -105,7 +105,7 @@ decoder_input_channels = 640 * multiplier
 def calc_gradient_penalty(netD, real_data, fake_data):
     # print "real_data: ", real_data.size(), fake_data.size()
     alpha = torch.rand(args.batch_size, 1)
-    alpha = alpha.expand(args.batch_size, int(real_data.nelement()/args.batch_size)).contiguous().view(args.batch_size, 3, 32, 32)
+    alpha = alpha.expand(args.batch_size, int(real_data.nelement()/args.batch_size)).contiguous().view(args.batch_size, 3, 224, 224)
     alpha = alpha.to(device)
 
     interpolates = alpha * real_data + ((1 - alpha) * fake_data)
