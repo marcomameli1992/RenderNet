@@ -136,29 +136,30 @@ class RenderDataset(Dataset):
         return_dict = {'eevee': eevee_image, 'cycles': cycles_image}
         if self.get_albedo:
             return_dict['albedo'] = albedo_image
+            assert torch.isnan(albedo_image).sum() == 0
         if self.get_depth:
             return_dict['depth'] = depth_image
+            assert torch.isnan(depth_image).sum() == 0
         if self.get_position:
             return_dict['position'] = position_image
+            assert torch.isnan(position_image).sum() == 0
         if self.get_normal:
             return_dict['normal'] = normal_image
+            assert torch.isnan(normal_image).sum() == 0
         if self.get_metalness:
             return_dict['metalness'] = metalness_image
+            assert torch.isnan(metalness_image).sum() == 0
         if self.get_roughness:
             return_dict['roughness'] = roughness_image
+            assert torch.isnan(roughness_image).sum() == 0
         if self.get_emissive:
             return_dict['emissive'] = emissive_image
+            assert torch.isnan(emissive_image).sum() == 0
         if self.get_position:
             return_dict['position'] = position_image
+            assert torch.isnan(position_image).sum() == 0
 
         assert torch.isnan(eevee_image).sum() == 0
         assert torch.isnan(cycles_image).sum() == 0
-        assert torch.isnan(albedo_image).sum() == 0
-        assert torch.isnan(depth_image).sum() == 0
-        assert torch.isnan(position_image).sum() == 0
-        assert torch.isnan(normal_image).sum() == 0
-        assert torch.isnan(metalness_image).sum() == 0
-        assert torch.isnan(roughness_image).sum() == 0
-        assert torch.isnan(emissive_image).sum() == 0
 
         return return_dict
