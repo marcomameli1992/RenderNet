@@ -160,15 +160,6 @@ else:
     print('No checkpoint found')
     s_epoch = 0
 
-real_features = []
-
-with tqdm(dataloader, unit='batch', desc='Batch', position=1) as tbatch:
-    for i, data in enumerate(tbatch):
-        data['cycles'] = data['cycles'].to(device)
-        discriminator_optimizer.zero_grad()
-
-        real_features.append(perceptual_network(data['cycles']))
-
 perceptual_network.eval()
 
 epoch_bar = tqdm(total=args.epochs, initial=s_epoch, desc='Epoch', position=0, unit='epoch')
