@@ -1,0 +1,261 @@
+import os
+from glob import glob
+import torch
+from torch import nn as NN
+from model.generator.Generator import Generator
+from dataset.RenderDataset import RenderDataset
+from model.perceptual.PerceptualNetwork import PerceptualNetwork
+from model.perceptual.PerceptualNetwork2 import PerceptualLoss
+from torch.utils.data import DataLoader
+from model.discriminator.Discriminator import Discriminator
+import torch.nn.functional as F
+
+from torchmetrics.functional import structural_similarity_index_measure, multiscale_structural_similarity_index_measure, \
+    universal_image_quality_index
+
+from torchvision.transforms import Resize, ToPILImage
+
+from tqdm import tqdm
+
+import argparse
+
+import neptune.new as neptune
+
+parser = argparse.ArgumentParser(description='RenderNet training script')
+
+parser.add_argument('--data', type=str, default=None, metavar='D',)
+parser.add_argument('--image_folder', type=str, default=None, metavar='F',)
+parser.add_argument('--epochs', type=int, default=10, metavar='E',)
+parser.add_argument('--lr', type=float, default=2e-5, metavar='LR',)
+parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
+parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
+parser.add_argument('--save_path', type=str, default=None, metavar='SP')
+parser.add_argument('--workers', type=int, default=2, help='number of data loading workers')
+parser.add_argument('--continue_train', action='store_true')
+parser.add_argument('--use_all', action='store_true')
+parser.add_argument('--use_albedo', action='store_true')
+parser.add_argument('--use_normal', action='store_true')
+parser.add_argument('--use_depth', action='store_true')
+parser.add_argument('--use_emissive', action='store_true')
+parser.add_argument('--use_metalness', action='store_true')
+parser.add_argument('--use_roughness', action='store_true')
+parser.add_argument('--use_position', action='store_true')
+parser.add_argument('--save_from', type=int, default=250, help='the epoch to start saving')
+parser.add_argument('--n_critic', type=int, default=5, help='how much training the discriminator')
+
+args = parser.parse_args()
+
+#%%
+if torch.has_mps:
+    print('Using MPS')
+    device = torch.device('mps')
+else:
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+## configure neptune
+run = neptune.init(
+    project="marcomameli1992/RenderNet",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkZWJkNDEyYS01NjI0LTRjMDAtODI5Yi0wMzI4NWU5NDc0ZmMifQ==",
+)  # your credentials
+
+if args.save_path == None:
+    save_path = './checkpoints/'
+else:
+    save_path = args.save_path
+
+os.makedirs(save_path, exist_ok=True)
+
+#%%
+use_all = False
+use_albedo = False
+use_normal = False
+use_depth = False
+use_emissive = False
+use_metalness = False
+use_roughness = False
+use_position = False
+
+multiplier = 1
+
+if args.use_all:
+    use_all = True
+    multiplier += 7
+if args.use_albedo:
+    use_albedo = True
+    multiplier += 1
+if args.use_normal:
+    use_normal = True
+    multiplier += 1
+if args.use_depth:
+    use_depth = True
+    multiplier += 1
+if args.use_emissive:
+    use_emissive = True
+    multiplier += 1
+if args.use_metalness:
+    use_metalness = True
+    multiplier += 1
+if args.use_roughness:
+    use_roughness = True
+    multiplier += 1
+if args.use_position:
+    use_position = True
+    multiplier += 1
+
+decoder_input_channels = 640 * multiplier
+
+
+#%% Model construction
+generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
+discriminator = Discriminator()
+perceptual_network = PerceptualLoss(network='vgg16', layers=['relu_1_2', 'relu_2_2', 'relu_3_3', 'relu_4_3'], use_gpu=True, gpu_ids=[0])
+
+generator.to(device)
+discriminator.to(device)
+perceptual_network.to(device)
+perceptual_network.requires_grad_(False)
+#%% dataset opening
+transform = Resize((224, 224))
+dataset = RenderDataset(args.data, args.image_folder, transform=transform, get_all=use_all, get_albedo=use_albedo, get_depth=use_depth, get_emissive=use_emissive, get_metalness=use_metalness, get_normal=use_normal, get_roughness=use_roughness, get_position=use_position)
+dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+
+## Loss definition
+if args.gan_loss == 'mse':
+    gan_loss = NN.MSELoss()
+elif args.gan_loss == 'bce':
+    gan_loss = NN.L1Loss()
+
+discriminator_loss = NN.BCEWithLogitsLoss()
+
+similarity_loss1 = structural_similarity_index_measure
+similarity_loss2 = multiscale_structural_similarity_index_measure
+similarity_loss3 = universal_image_quality_index
+
+## Optimizator
+generator_optimizer = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
+discriminator_optimizer = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr)
+
+generator.train()
+discriminator.train()
+
+params = {"learning_rate": args.lr, "discriminator_optimizer": "RMSProp", "generator_optimizer": "RMSProp", "batch_size": args.batch_size, "epochs": args.epochs, "gan_loss": args.gan_loss}
+run["parameters"] = params
+run["data"] = {"use_all": use_all, "use_albedo": use_albedo, "use_depth": use_depth, "use_emissive": use_emissive, "use_metalness": use_metalness, "use_normal": use_normal, "use_roughness": use_roughness, "use_position": use_position}
+
+image_transform = ToPILImage()
+
+if args.continue_train and (len(os.listdir(save_path)) > 0):
+    print('Continue from checkpoint')
+    list_of_checkpoints = glob(os.path.join(save_path, 'state') + '/*.pth')
+    latest_checkpoint = max(list_of_checkpoints, key=os.path.getctime)
+    print('Loading checkpoint: {}'.format(latest_checkpoint))
+    checkpoint = torch.load(latest_checkpoint)
+    generator.load_state_dict(checkpoint['generator_state_dict'])
+    discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
+    generator_optimizer.load_state_dict(checkpoint['generator_optimizer_state_dict'])
+    discriminator_optimizer.load_state_dict(checkpoint['discriminator_optimizer_state_dict'])
+    s_epoch = checkpoint['epoch']
+    print('Loaded checkpoint at epoch: {}'.format(s_epoch))
+else:
+    print('No checkpoint found')
+    s_epoch = 0
+
+real_features = []
+
+with tqdm(dataloader, unit='batch', desc='Batch', position=1) as tbatch:
+    for i, data in enumerate(tbatch):
+        data['cycles'] = data['cycles'].to(device)
+        discriminator_optimizer.zero_grad()
+
+        real_features.append(perceptual_network(data['cycles']))
+
+perceptual_network.eval()
+
+epoch_bar = tqdm(total=args.epochs, initial=s_epoch, desc='Epoch', position=0, unit='epoch')
+for epoch in range(s_epoch, args.epochs):
+    with tqdm(dataloader, unit='batch', desc='Batch', position=1) as tbatch:
+        for i, data in enumerate(tbatch):
+
+            for key in data.keys():
+                data[key] = data[key].to(device)
+
+            #-------------------
+            # Train Discriminator
+            #-------------------
+            discriminator_optimizer.zero_grad()
+
+            fake_images = generator(data).detach()
+
+            discriminator_loss = -torch.mean(discriminator(data['cycles'])) + torch.mean(discriminator(fake_images))
+
+            run["train/perceptual_loss"].log(10 if torch.isnan(perceptual_loss) else perceptual_loss.item())
+
+            discriminator_loss.backward()
+            discriminator_optimizer.step()
+
+            # Clip weights of discriminator
+            for p in discriminator.parameters():
+                p.data.clamp_(-0.01, 0.01)
+
+            #-------------------
+            # Train Generator
+            #-------------------
+
+            # Train the generator every n_critic steps
+            if i % args.n_critic == 0:
+                generator_optimizer.zero_grad()
+
+                fake_images = generator(data)
+
+                # Perceptual loss
+                perceptual_loss = perceptual_network(fake_images, data['cycles'])
+                s_loss1 = similarity_loss1(data['cycles'], fake_images)
+                s_loss2 = similarity_loss2(data['cycles'], fake_images, normalize='relu')
+                s_loss3 = similarity_loss3(data['cycles'], fake_images)
+                generator_distance = gan_loss(data['cycles'], fake_images)
+                g_loss = 0.2 * generator_distance + 0.2 * perceptual_loss +\
+                         0.2 * (1/s_loss1) + 0.2 * (1/s_loss2) + 0.2 * (1/s_loss3)
+
+                generator_loss = -torch.mean(discriminator(fake_images))
+                generator_loss += g_loss
+
+                run["train/generator_loss"].log(10 if torch.isnan(generator_loss) else generator_loss)
+                run["train/generator_distance"].log(10 if torch.isnan(generator_distance) else generator_distance)
+                run["train/SSIM"].log(-1 if torch.isnan(s_loss1) else s_loss1)
+                run["train/MSSSIM"].log(-1 if torch.isnan(s_loss2) else s_loss2)
+                run["train/UIQI"].log(-1 if torch.isnan(s_loss3) else s_loss3)
+                run["train/perceptual_loss"].log(10 if torch.isnan(perceptual_loss) else perceptual_loss.item())
+
+                generator_loss.backward()
+                generator_optimizer.step()
+
+        os.makedirs(os.path.join(save_path, 'state'), exist_ok=True)
+
+        if epoch % 50 == 0 or (epoch + 1) % 50 == 0:
+            for n in range(fake_images.shape[0]):
+                fake_pillow = image_transform(fake_images[n].cpu())
+                real_pillow = image_transform(data['cycles'][n].cpu())
+
+                os.makedirs(os.path.join(save_path, 'images', 'epoch_{}'.format(epoch)), exist_ok=True)
+
+                fake_pillow.save(
+                    os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'fake_{}.png'.format(n)))
+                real_pillow.save(
+                    os.path.join(save_path, 'images', 'epoch_{}'.format(epoch), 'real_{}.png'.format(n)))
+
+                run["fake_generated_epoch_" + str(epoch) + "_batch_" + str(i)].log(fake_pillow)
+                run["real_image_epoch_" + str(epoch) + "_batch_" + str(i)].log(real_pillow)
+        if (epoch > args.save_from and epoch % 25 == 0) or epoch == (args.epochs - 1):
+            torch.save({
+                'epoch': epoch,
+                'generator_state_dict': generator.state_dict(),
+                'discriminator_state_dict': discriminator.state_dict(),
+                'generator_optimizer_state_dict': generator_optimizer.state_dict(),
+                'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
+                'discriminator_loss': perceptual_loss,
+                'generator_loss': generator_loss,
+            }, os.path.join(os.path.join(save_path, 'state'), 'checkpoint_' + str(epoch) + '.pth'))
+
+        epoch_bar.update(1)
+
+        run.stop()
