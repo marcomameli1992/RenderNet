@@ -8,28 +8,28 @@ class Encoder(NN.Module):
     def __init__(self, use_pretrained=True, use_all=True, use_albedo=False, use_depth=False, use_emissive=False, use_metalness=False, use_normal=False, use_roughness=False, use_position=False):
         super(Encoder, self).__init__()
         if use_all:
-            self.metalness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.roughness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.depth_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.albedo_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.normal_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.emissive_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-            self.position_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
-        self.eevee_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.metalness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.roughness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.depth_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.albedo_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.normal_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.emissive_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+            self.position_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+        self.eevee_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_albedo:
-            self.albedo_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.albedo_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_depth:
-            self.depth_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.depth_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_emissive:
-            self.emissive_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.emissive_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_metalness:
-            self.metalness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.metalness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_normal:
-            self.normal_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.normal_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_roughness:
-            self.roughness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.roughness_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
         if use_position:
-            self.position_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K)
+            self.position_encoder = efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
 
         self.use_all = use_all
         self.use_albedo = use_albedo
