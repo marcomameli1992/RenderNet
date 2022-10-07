@@ -16,11 +16,12 @@ class Discriminator(NN.Module):
             NN.Linear(4096, 4096),
             NN.ReLU(True),
             NN.Dropout(p=0.5),
-            NN.Linear(4096, 2),
+            NN.Linear(4096, 1),
         )
 
     def forward(self, x):
-        x = self.vgg16(x)
+        with torch.no_grad():
+            x = self.vgg16.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
