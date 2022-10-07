@@ -249,4 +249,4 @@ for epoch in range(s_epoch, args.epochs):
 
         epoch_bar.update(1)
 
-        run.stop()
+run.stop()
