@@ -115,7 +115,8 @@ def calc_gradient_penalty(netD, real_data, fake_data):
 
     disc_interpolates = netD(interpolates)
 
-    gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates, grad_outputs=None,
+    gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates,
+                              grad_outputs=torch.ones(disc_interpolates.size()).to(device), allow_unused=True,
                               create_graph=True, retain_graph=True, only_inputs=True)[0]
     gradients = gradients.view(gradients.size(0), -1)
 
