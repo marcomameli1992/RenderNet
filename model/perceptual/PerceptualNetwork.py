@@ -1,11 +1,10 @@
 from collections import namedtuple
 
-import torch
 from torch import nn as NN
 from torchvision.models import vgg16
 
-class PerceptualNetwork(NN.Module):
 
+class PerceptualNetwork(NN.Module):
     def __init__(self):
         super(PerceptualNetwork, self).__init__()
         self.vgg16_layers = vgg16(pretrained=True).features
