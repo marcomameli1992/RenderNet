@@ -198,8 +198,8 @@ for epoch in range(s_epoch, args.epochs):
             discriminator_loss = -torch.mean(discriminator(data['cycles'])) + torch.mean(discriminator(fake_images))
 
 
-            gp = calc_gradient_penalty(discriminator, data['cycles'], fake_images)
-            discriminator_loss += 0.2 * gp
+            #gp = calc_gradient_penalty(discriminator, data['cycles'], fake_images)
+            #discriminator_loss += 0.2 * gp
 
             run["train/discriminator_loss"].log(discriminator_loss.item())
             run["train/gradient_penalty"].log(gp.item())
