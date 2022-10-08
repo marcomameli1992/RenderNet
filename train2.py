@@ -54,7 +54,7 @@ else:
 run = neptune.init(
     project="marcomameli1992/RenderNet",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkZWJkNDEyYS01NjI0LTRjMDAtODI5Yi0wMzI4NWU5NDc0ZmMifQ==",
-)  # your credentials
+ run="REN-18")  # your credentials
 
 if args.save_path == None:
     save_path = './checkpoints/'
@@ -202,7 +202,7 @@ for epoch in range(s_epoch, args.epochs):
             #discriminator_loss += 0.2 * gp
 
             run["train/discriminator_loss"].log(discriminator_loss.item())
-            run["train/gradient_penalty"].log(gp.item())
+            #run["train/gradient_penalty"].log(gp.item())
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
