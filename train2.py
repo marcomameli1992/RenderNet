@@ -54,7 +54,7 @@ else:
 run = neptune.init(
     project="marcomameli1992/RenderNet",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkZWJkNDEyYS01NjI0LTRjMDAtODI5Yi0wMzI4NWU5NDc0ZmMifQ==",
- run="REN-18")  # your credentials
+ run="REN-128")  # your credentials
 
 if args.save_path == None:
     save_path = './checkpoints/'
