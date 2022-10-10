@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='RenderNet training script')
 parser.add_argument('--data', type=str, default=None, metavar='D',)
 parser.add_argument('--image_folder', type=str, default=None, metavar='F',)
 parser.add_argument('--epochs', type=int, default=10, metavar='E',)
-parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',)
+parser.add_argument('--lr', type=float, default=1e-5, metavar='LR',)
 parser.add_argument('--gan_loss', type=str, default='mse', metavar='GL',)
 parser.add_argument('--batch_size', type=int, default=1, help='the batch size')
 parser.add_argument('--save_path', type=str, default=None, metavar='SP')
@@ -101,27 +101,6 @@ if args.use_position:
     multiplier += 1
 
 decoder_input_channels = 640 * multiplier
-
-def calc_gradient_penalty(netD, real_data, fake_data):
-    # print "real_data: ", real_data.size(), fake_data.size()
-    alpha = torch.rand(args.batch_size, 1, requires_grad=True)
-    alpha = alpha.expand(args.batch_size, int(real_data.nelement()/args.batch_size)).contiguous().view(args.batch_size, 3, 224, 224)
-    alpha = alpha.to(device)
-
-    interpolates = alpha * real_data + ((1 - alpha) * fake_data)
-
-    interpolates = interpolates.to(device)
-    interpolates = torch.autograd.Variable(interpolates, requires_grad=True)
-
-    disc_interpolates = netD(interpolates)
-
-    gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                              grad_outputs=torch.ones(disc_interpolates.size()).to(device), allow_unused=True,
-                              create_graph=True, retain_graph=True, only_inputs=True)[0]
-    gradients = gradients.view(gradients.size(0), -1)
-
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * 10
-    return gradient_penalty
 
 #%% Model construction
 generator = Generator(decoder_input_channels, 3, multiplier=multiplier, use_all=use_all, use_albedo=use_albedo, use_depth=use_depth, use_emissive=use_emissive, use_metalness=use_metalness, use_normal=use_normal, use_roughness=use_roughness, use_position=use_position) ##
@@ -202,7 +181,6 @@ for epoch in range(s_epoch, args.epochs):
             #discriminator_loss += 0.2 * gp
 
             run["train/discriminator_loss"].log(discriminator_loss.item())
-            #run["train/gradient_penalty"].log(gp.item())
 
             discriminator_loss.backward()
             discriminator_optimizer.step()
