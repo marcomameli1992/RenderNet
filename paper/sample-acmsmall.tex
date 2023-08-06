@@ -1,6 +1,12 @@
+
 \documentclass[format=acmsmall, review=false, screen=true]{acmart}
 
 \usepackage{booktabs} % For formal tables
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+
 
 \usepackage[ruled]{algorithm2e} % For algorithms
 \renewcommand{\algorithmcfname}{ALGORITHM}
@@ -42,7 +48,7 @@
 % Document starts
 \begin{document}
 % Title portion. Note the short title for running heads
-\title[RenderGAN]{RenderGAN: Application of encoder-decoder architecture in combination with GAN framework for Rendering generatio}
+\title[RenderGAN]{RenderGAN: enhancing real-time rendering efficiency with Deep Learning}
 
 \author{Marco Mameli}
 \orcid{0000-0002-5269-9939}
@@ -78,21 +84,9 @@
 }
 \email{a.mancini@univpm.it}
 
-\author{Rocco Pietrini}
-\orcid{0000-0003-4343-7555}
-\affiliation{%
-  \institution{Universit\`a Politecnica delle Marche, Dipartimento di Ingegneria dell'Informazione (DII)}
-  \streetaddress{Via Brecce Bianche, 12}
-  \city{Ancona}
-  \state{}
-  \postcode{60131}
-  \country{Italy}
-}
-\email{r.pietrini@staff.univpm.it}
-
 \author{Primo Zingaretti}
 \affiliation{%
-  \institution{Universit\`a Politecnica delle Marche, VRAI - Vision Robotics and Artificial Intelligence Lab, Dipartimento di Ingegneria dell'Informazione (DII)}
+  \institution{Universit\`a Politecnica delle Marche, Dipartimento di Ingegneria dell'Informazione (DII)}
   \streetaddress{Via Brecce Bianche, 12}
   \city{Ancona}
   \state{}
@@ -104,6 +98,7 @@
 
 \begin{abstract}
 In the domain of computer graphics, achieving high visual quality in real-time rendering remains a formidable challenge due to the inherent time-quality trade-off. Conventional real-time rendering engines sacrifice visual fidelity for interactive performance, while image generation using path-tracing techniques can be exceedingly time-consuming. In this paper, we introduce RenderGAN, a cutting-edge deep learning-based solution designed to address this critical challenge in real-time rendering. RenderGAN utilizes G-Buffers and information from a real-time rendering engine as inputs to produce output images with exceptional visual fidelity. Its encoder-decoder architecture, trained using the Generative Adversarial Network (GAN) framework with perceptual loss, enhances image realism. To evaluate RenderGAN's effectiveness, we quantitatively compare the generated images with those of a path-tracing engine, obtaining a remarkable Universal Image Quality Index (UIQI) value of 0.898. RenderGAN's open-source nature fosters collaboration, driving advancements in real-time computer graphics and rendering techniques. By bridging the gap between real-time and path-tracing rendering, RenderGAN opens new horizons for accelerated image generation, inspiring innovation and unlocking the full potential of real-time visual experiences.
+Project page: https://github.com/marcomameli1992/RenderNet
 \end{abstract}
 
 
@@ -127,7 +122,7 @@ In the domain of computer graphics, achieving high visual quality in real-time r
 %
 % End generated code
 %
-\keywords{}
+\keywords{Computer Graphics, Deep Learning, Generative Adversarial Networks, RenderGAN}
 
 
 
